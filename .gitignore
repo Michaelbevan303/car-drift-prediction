@@ -26,3 +26,5 @@ Thumbs.db
 
 # Keep the trained model artifact (needed by the API at runtime)
 !model_artifact.joblib
+
+.vercel
