@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Car Drift Prediction</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #0f1220;
+    --card: #171b2e;
+    --border: #2a2f4a;
+    --text: #e9ebf5;
+    --muted: #9aa0c0;
+    --accent: #6c8bff;
+    --danger: #ff6b6b;
+    --safe: #4cd97b;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f4f5fb; --card:#ffffff; --border:#dfe2f2; --text:#1a1c2b; --muted:#5b5f7a; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1rem 4rem;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  p.sub { color: var(--muted); margin-top: 0; margin-bottom: 1.5rem; }
+  form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.25rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  @media (max-width: 640px) { form { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 0.3rem; position: relative; }
+  label { font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; }
+  .help-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--border); color: var(--muted);
+    font-size: 0.7rem; font-weight: 700; cursor: help; flex-shrink: 0;
+  }
+  .tooltip {
+    display: none;
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    left: 0;
+    margin-top: 0.25rem;
+    background: #000;
+    color: #fff;
+    font-size: 0.78rem;
+    line-height: 1.3;
+    padding: 0.5rem 0.65rem;
+    border-radius: 8px;
+    width: 240px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .help-icon:hover + .tooltip, .help-icon:focus + .tooltip { display: block; }
+  input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.95rem;
+  }
+  input:invalid { border-color: var(--danger); }
+  .range-hint { font-size: 0.72rem; color: var(--muted); }
+  .actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
+  button {
+    background: var(--accent); color: #fff; border: none;
+    padding: 0.7rem 1.4rem; border-radius: 8px; font-size: 1rem; font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .error { color: var(--danger); font-size: 0.85rem; grid-column: 1 / -1; }
+  #result {
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    display: none;
+  }
+  #result.show { display: block; }
+  #result.drift { border-color: var(--danger); }
+  #result.no-drift { border-color: var(--safe); }
+  .verdict { font-size: 1.4rem; font-weight: 700; }
+  .verdict.drift { color: var(--danger); }
+  .verdict.no-drift { color: var(--safe); }
+  .prob-bar-track { background: var(--border); border-radius: 6px; height: 10px; margin-top: 0.6rem; overflow: hidden; }
+  .prob-bar-fill { height: 100%; background: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Car Drift Prediction</h1>
+  <p class="sub">Enter the vehicle telemetry below. Hover the <span class="help-icon" style="position:static">?</span> icons for guidance on each value.</p>
+
+  <form id="drift-form"></form>
+
+  <div id="result">
+    <div class="verdict" id="verdict-text"></div>
+    <div id="prob-text"></div>
+    <div class="prob-bar-track"><div class="prob-bar-fill" id="prob-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
+<script>
+// [key, label, help text, min, max, step, default]
+const FIELDS = [
+  ["Vx", "Vehicle forward speed (km/h)", "Longitudinal speed of the vehicle. Drift is more likely at moderate-to-high speeds.", 0, 200, 0.1, 80],
+  ["Ax", "Forward acceleration (m/s²)", "Longitudinal acceleration from braking or accelerating. Affects car stability.", -10, 10, 0.01, 0],
+  ["Ay", "Sideways acceleration (m/s²)", "Lateral acceleration. High values often trigger drift.", -10, 10, 0.01, -2],
+  ["Az", "Vertical acceleration (m/s²)", "Optional; reflects uneven road surfaces.", -3, 3, 0.01, 0],
+  ["steering_angle", "Steering angle (degrees)", "Driver's steering input. High angles increase drift probability.", -45, 45, 0.1, -10],
+  ["yaw_rate", "Yaw rate (deg/s)", "Rate of rotation around the vertical axis. High yaw rate correlates with oversteer/drift.", -20, 20, 0.1, -3],
+  ["slip_angle", "Slip angle (degrees)", "Difference between the vehicle's heading and its actual velocity direction.", -25, 25, 0.1, -4],
+  ["V_fl", "Front-left wheel speed (km/h)", "Used to compute rear traction loss (should be close to forward speed).", 0, 220, 0.1, 79],
+  ["V_fr", "Front-right wheel speed (km/h)", "Used for traction calculation (should be close to forward speed).", 0, 220, 0.1, 79],
+  ["V_rl", "Rear-left wheel speed (km/h)", "Rear wheel slip relative to this indicates drift.", 0, 220, 0.1, 82],
+  ["V_rr", "Rear-right wheel speed (km/h)", "Rear wheel slip relative to this indicates drift.", 0, 220, 0.1, 82],
+  ["tire_slip_ratio", "Tire slip ratio", "Rear/front wheel speed difference normalized by vehicle speed. Higher values indicate potential drift.", -0.5, 0.5, 0.001, 0.03],
+  ["throttle", "Throttle position (%)", "Gas pedal position. High throttle can induce oversteer.", 0, 100, 0.1, 40],
+  ["brake", "Brake pressure (%)", "Brake pedal pressure. Sudden braking affects stability.", 0, 100, 0.1, 0],
+  ["gear", "Current gear", "Gear affects torque delivered to the rear wheels.", 1, 6, 1, 3],
+  ["road_curvature", "Road curvature (1/m)", "Sharper curves increase drift likelihood.", 0, 0.1, 0.0001, 0.01],
+  ["road_friction", "Road friction coefficient", "Surface grip. Lower friction (e.g. wet/icy roads) increases drift risk.", 0.1, 1.2, 0.01, 0.85],
+  ["road_slope", "Road slope / banking (degrees)", "Road tilt, which affects lateral forces.", -10, 10, 0.1, 0],
+  ["Ay_Ax_ratio", "Lateral/longitudinal accel. ratio", "Derived: ratio of Ay to Ax, a normalized measure of lateral motion.", -50, 50, 0.01, -2],
+  ["normalized_yaw_rate", "Normalized yaw rate", "Derived: yaw rate divided by speed, accounting for speed dependency.", -2, 2, 0.001, -0.04],
+  ["slip_angle_approx", "Approx. slip angle (radians)", "Derived: atan(Ay / Vx), indicating sideways drift tendency.", -2, 2, 0.001, -0.03],
+  ["rear_traction_loss", "Rear traction loss (km/h)", "Derived: difference between rear and front wheel speeds. High values indicate rear slip.", -100, 100, 0.01, 3],
+];
+
+const form = document.getElementById("drift-form");
+
+FIELDS.forEach(([key, label, help, min, max, step, def]) => {
+  const field = document.createElement("div");
+  field.className = "field";
+  field.innerHTML = `
+    <label for="${key}">${label}
+      <span class="help-icon" tabindex="0">?</span>
+      <span class="tooltip">${help} Valid range: ${min} to ${max}.</span>
+    </label>
+    <input type="number" id="${key}" name="${key}" required
+      min="${min}" max="${max}" step="${step}" value="${def}" />
+    <span class="range-hint">Range: ${min} – ${max}</span>
+  `;
+  form.appendChild(field);
+});
+
+const actions = document.createElement("div");
+actions.className = "actions";
+actions.innerHTML = `
+  <button type="submit" id="submit-btn">Predict Drift</button>
+  <span class="error" id="form-error"></span>
+`;
+form.appendChild(actions);
+
+const resultBox = document.getElementById("result");
+const verdictText = document.getElementById("verdict-text");
+const probText = document.getElementById("prob-text");
+const probBar = document.getElementById("prob-bar");
+const formError = document.getElementById("form-error");
+const submitBtn = document.getElementById("submit-btn");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  formError.textContent = "";
+
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const payload = {};
+  for (const [key] of FIELDS) {
+    const input = document.getElementById(key);
+    const val = parseFloat(input.value);
+    if (Number.isNaN(val) || val < parseFloat(input.min) || val > parseFloat(input.max)) {
+      formError.textContent = `Value for "${key}" is out of the valid range.`;
+      return;
+    }
+    payload[key] = key === "gear" ? Math.round(val) : val;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Predicting...";
+
+  try {
+    const res = await fetch("/api/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.detail ? JSON.stringify(errBody.detail) : `Request failed (${res.status})`);
+    }
+
+    const data = await res.json();
+    const pct = (data.drift_probability * 100).toFixed(1);
+
+    resultBox.className = "show " + (data.drift ? "drift" : "no-drift");
+    verdictText.textContent = data.drift ? "⚠ Drift" : "✓ No Drift";
+    verdictText.className = "verdict " + (data.drift ? "drift" : "no-drift");
+    probText.textContent = `Drift probability: ${pct}% (decision threshold: ${(data.threshold * 100).toFixed(0)}%)`;
+    probBar.style.width = `${pct}%`;
+  } catch (err) {
+    formError.textContent = "Error: " + err.message;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Predict Drift";
+  }
+});
+</script>
+</body>
+</html>
