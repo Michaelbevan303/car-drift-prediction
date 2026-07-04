@@ -7,41 +7,87 @@
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #0f1220;
+    --bg: #0b0e1a;
+    --bg-grad-a: #131735;
+    --bg-grad-b: #0b0e1a;
     --card: #171b2e;
+    --card-2: #1c2138;
     --border: #2a2f4a;
     --text: #e9ebf5;
     --muted: #9aa0c0;
     --accent: #6c8bff;
+    --accent-2: #9f7cff;
     --danger: #ff6b6b;
     --safe: #4cd97b;
   }
   @media (prefers-color-scheme: light) {
-    :root { --bg:#f4f5fb; --card:#ffffff; --border:#dfe2f2; --text:#1a1c2b; --muted:#5b5f7a; }
+    :root {
+      --bg:#f4f5fb; --bg-grad-a:#eef0ff; --bg-grad-b:#f4f5fb;
+      --card:#ffffff; --card-2:#f7f8fd; --border:#dfe2f2; --text:#1a1c2b; --muted:#5b5f7a;
+    }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: var(--bg);
+    background:
+      radial-gradient(1200px 600px at 20% -10%, var(--bg-grad-a), transparent),
+      var(--bg-grad-b);
     color: var(--text);
-    padding: 2rem 1rem 4rem;
+    padding: 0 1rem 4rem;
+    line-height: 1.5;
   }
-  .wrap { max-width: 780px; margin: 0 auto; }
-  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
-  p.sub { color: var(--muted); margin-top: 0; margin-bottom: 1.5rem; }
-  form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem 1.25rem;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.5rem;
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 3rem 0 1.5rem; text-align: center; }
+  .hero h1 {
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    margin: 0 0 0.5rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  @media (max-width: 640px) { form { grid-template-columns: 1fr; } }
+  .hero p.sub { color: var(--muted); max-width: 560px; margin: 0 auto; font-size: 1rem; }
+  .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 1.25rem; }
+  .badge {
+    background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+    padding: 0.4rem 0.9rem; font-size: 0.82rem; color: var(--muted); display: flex; gap: 0.4rem; align-items: center;
+  }
+  .badge strong { color: var(--text); }
+
+  /* ---------- Cards / sections ---------- */
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .card h2 { font-size: 1.1rem; margin: 0 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  @media (max-width: 640px) { .about-grid { grid-template-columns: 1fr; } }
+  .about-grid h3 { font-size: 0.9rem; margin: 0 0 0.4rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .about-grid p, .about-grid ul { margin: 0; font-size: 0.92rem; color: var(--text); }
+  .about-grid ul { padding-left: 1.1rem; }
+  .about-grid li { margin-bottom: 0.3rem; }
+  details.about-toggle summary {
+    cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 0.5rem;
+  }
+  details.about-toggle summary::-webkit-details-marker { display: none; }
+  details.about-toggle summary::before { content: "▸"; transition: transform 0.15s ease; color: var(--accent); }
+  details.about-toggle[open] summary::before { transform: rotate(90deg); }
+  details.about-toggle .about-grid { margin-top: 1rem; }
+
+  /* ---------- Form ---------- */
+  fieldset { border: none; padding: 0; margin: 0 0 1.5rem; }
+  fieldset:last-of-type { margin-bottom: 0; }
+  legend {
+    font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--accent); padding: 0 0 0.6rem; width: 100%; border-bottom: 1px solid var(--border); margin-bottom: 1rem;
+  }
+  .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; }
+  @media (max-width: 640px) { .fields-grid { grid-template-columns: 1fr; } }
   .field { display: flex; flex-direction: column; gap: 0.3rem; position: relative; }
-  label { font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; }
+  label { font-size: 0.86rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; }
   .help-icon {
     display: inline-flex; align-items: center; justify-content: center;
     width: 16px; height: 16px; border-radius: 50%;
@@ -58,105 +104,206 @@
     background: #000;
     color: #fff;
     font-size: 0.78rem;
-    line-height: 1.3;
-    padding: 0.5rem 0.65rem;
+    line-height: 1.35;
+    padding: 0.55rem 0.7rem;
     border-radius: 8px;
     width: 240px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
   }
   .help-icon:hover + .tooltip, .help-icon:focus + .tooltip { display: block; }
   input {
-    background: var(--bg);
+    background: var(--card-2);
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 8px;
-    padding: 0.5rem 0.6rem;
+    padding: 0.55rem 0.65rem;
     font-size: 0.95rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,139,255,0.2); }
   input:invalid { border-color: var(--danger); }
   .range-hint { font-size: 0.72rem; color: var(--muted); }
-  .actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
+  .actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
   button {
-    background: var(--accent); color: #fff; border: none;
-    padding: 0.7rem 1.4rem; border-radius: 8px; font-size: 1rem; font-weight: 600;
-    cursor: pointer;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #fff; border: none;
+    padding: 0.8rem 1.8rem; border-radius: 10px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 16px rgba(108,139,255,0.35);
+    transition: transform 0.1s ease, opacity 0.15s ease;
   }
-  button:disabled { opacity: 0.6; cursor: not-allowed; }
-  .error { color: var(--danger); font-size: 0.85rem; grid-column: 1 / -1; }
+  button:hover:not(:disabled) { transform: translateY(-1px); }
+  button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .error { color: var(--danger); font-size: 0.85rem; }
+
+  /* ---------- Result ---------- */
   #result {
     margin-top: 1.5rem;
-    padding: 1.25rem 1.5rem;
-    border-radius: 12px;
+    padding: 1.5rem;
+    border-radius: 14px;
     border: 1px solid var(--border);
     background: var(--card);
     display: none;
   }
-  #result.show { display: block; }
-  #result.drift { border-color: var(--danger); }
-  #result.no-drift { border-color: var(--safe); }
-  .verdict { font-size: 1.4rem; font-weight: 700; }
+  #result.show { display: flex; flex-direction: column; gap: 0.6rem; animation: fadein 0.25s ease; }
+  #result.drift { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger) inset; }
+  #result.no-drift { border-color: var(--safe); box-shadow: 0 0 0 1px var(--safe) inset; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .verdict { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
   .verdict.drift { color: var(--danger); }
   .verdict.no-drift { color: var(--safe); }
-  .prob-bar-track { background: var(--border); border-radius: 6px; height: 10px; margin-top: 0.6rem; overflow: hidden; }
-  .prob-bar-fill { height: 100%; background: var(--accent); }
+  .prob-bar-track { background: var(--border); border-radius: 6px; height: 10px; overflow: hidden; }
+  .prob-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.4s ease; }
+  .prob-meta { font-size: 0.85rem; color: var(--muted); }
+
+  footer { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 2rem; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Car Drift Prediction</h1>
-  <p class="sub">Enter the vehicle telemetry below. Hover the <span class="help-icon" style="position:static">?</span> icons for guidance on each value.</p>
 
-  <form id="drift-form"></form>
-
-  <div id="result">
-    <div class="verdict" id="verdict-text"></div>
-    <div id="prob-text"></div>
-    <div class="prob-bar-track"><div class="prob-bar-fill" id="prob-bar" style="width:0%"></div></div>
+  <div class="hero">
+    <h1>🚗 Car Drift Prediction</h1>
+    <p class="sub">Enter live vehicle telemetry and get an instant prediction of whether the car is drifting — powered by a Random Forest model trained on sensor and driving-condition data.</p>
+    <div class="badges">
+      <span class="badge">🎯 <strong>99.5%</strong> test accuracy</span>
+      <span class="badge">📈 <strong>0.976</strong> F1 score</span>
+      <span class="badge">🌲 Random Forest + SMOTE</span>
+      <span class="badge">⚡ Live inference via FastAPI</span>
+    </div>
   </div>
+
+  <div class="card">
+    <details class="about-toggle" open>
+      <summary><h2 style="display:inline-flex;align-items:center;gap:0.5rem;margin:0;">ℹ️ About this project</h2></summary>
+      <div class="about-grid">
+        <div>
+          <h3>What is drift?</h3>
+          <p>Drifting happens when a car's rear wheels lose traction — often during sharp turns, high speeds, or sudden steering changes. Detecting it early matters for vehicle safety and for driver-assistance systems that need to react before control is lost.</p>
+        </div>
+        <div>
+          <h3>What the model looks at</h3>
+          <p>22 signals from the car's sensors: speed and acceleration, steering and rotation (yaw), all four wheel speeds, throttle/brake/gear, road conditions (curvature, friction, slope), and a few derived traction/slip metrics.</p>
+        </div>
+        <div>
+          <h3>How it was trained</h3>
+          <ul>
+            <li>Split 60% train / 20% validation / 20% test</li>
+            <li>SMOTE to balance the rarer "drifting" class</li>
+            <li>Random Forest tuned via cross-validated random search</li>
+            <li>Decision threshold tuned on validation data, then scored once on held-out test data for an honest result</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Using the form below</h3>
+          <p>Every field is a raw model input, labeled in plain English with its typical range. Hover the <span class="help-icon" style="position:static">?</span> icon next to any field for what it means and why it matters for drift.</p>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <form id="drift-form"></form>
+
+    <div id="result">
+      <div class="verdict" id="verdict-text"></div>
+      <div class="prob-bar-track"><div class="prob-bar-fill" id="prob-bar" style="width:0%"></div></div>
+      <div class="prob-meta" id="prob-text"></div>
+    </div>
+  </div>
+
+  <footer>
+    Synthetic dataset &amp; model — for demonstration purposes.
+    <a href="https://github.com/Michaelbevan303/car-drift-prediction" target="_blank" rel="noopener">View source on GitHub</a>
+  </footer>
 </div>
 
 <script>
 // [key, label, help text, min, max, step, default]
-const FIELDS = [
-  ["Vx", "Vehicle forward speed (km/h)", "Longitudinal speed of the vehicle. Drift is more likely at moderate-to-high speeds.", 0, 200, 0.1, 80],
-  ["Ax", "Forward acceleration (m/s²)", "Longitudinal acceleration from braking or accelerating. Affects car stability.", -10, 10, 0.01, 0],
-  ["Ay", "Sideways acceleration (m/s²)", "Lateral acceleration. High values often trigger drift.", -10, 10, 0.01, -2],
-  ["Az", "Vertical acceleration (m/s²)", "Optional; reflects uneven road surfaces.", -3, 3, 0.01, 0],
-  ["steering_angle", "Steering angle (degrees)", "Driver's steering input. High angles increase drift probability.", -45, 45, 0.1, -10],
-  ["yaw_rate", "Yaw rate (deg/s)", "Rate of rotation around the vertical axis. High yaw rate correlates with oversteer/drift.", -20, 20, 0.1, -3],
-  ["slip_angle", "Slip angle (degrees)", "Difference between the vehicle's heading and its actual velocity direction.", -25, 25, 0.1, -4],
-  ["V_fl", "Front-left wheel speed (km/h)", "Used to compute rear traction loss (should be close to forward speed).", 0, 220, 0.1, 79],
-  ["V_fr", "Front-right wheel speed (km/h)", "Used for traction calculation (should be close to forward speed).", 0, 220, 0.1, 79],
-  ["V_rl", "Rear-left wheel speed (km/h)", "Rear wheel slip relative to this indicates drift.", 0, 220, 0.1, 82],
-  ["V_rr", "Rear-right wheel speed (km/h)", "Rear wheel slip relative to this indicates drift.", 0, 220, 0.1, 82],
-  ["tire_slip_ratio", "Tire slip ratio", "Rear/front wheel speed difference normalized by vehicle speed. Higher values indicate potential drift.", -0.5, 0.5, 0.001, 0.03],
-  ["throttle", "Throttle position (%)", "Gas pedal position. High throttle can induce oversteer.", 0, 100, 0.1, 40],
-  ["brake", "Brake pressure (%)", "Brake pedal pressure. Sudden braking affects stability.", 0, 100, 0.1, 0],
-  ["gear", "Current gear", "Gear affects torque delivered to the rear wheels.", 1, 6, 1, 3],
-  ["road_curvature", "Road curvature (1/m)", "Sharper curves increase drift likelihood.", 0, 0.1, 0.0001, 0.01],
-  ["road_friction", "Road friction coefficient", "Surface grip. Lower friction (e.g. wet/icy roads) increases drift risk.", 0.1, 1.2, 0.01, 0.85],
-  ["road_slope", "Road slope / banking (degrees)", "Road tilt, which affects lateral forces.", -10, 10, 0.1, 0],
-  ["Ay_Ax_ratio", "Lateral/longitudinal accel. ratio", "Derived: ratio of Ay to Ax, a normalized measure of lateral motion.", -50, 50, 0.01, -2],
-  ["normalized_yaw_rate", "Normalized yaw rate", "Derived: yaw rate divided by speed, accounting for speed dependency.", -2, 2, 0.001, -0.04],
-  ["slip_angle_approx", "Approx. slip angle (radians)", "Derived: atan(Ay / Vx), indicating sideways drift tendency.", -2, 2, 0.001, -0.03],
-  ["rear_traction_loss", "Rear traction loss (km/h)", "Derived: difference between rear and front wheel speeds. High values indicate rear slip.", -100, 100, 0.01, 3],
+const GROUPS = [
+  {
+    title: "🏎️ Speed & Acceleration",
+    fields: [
+      ["Vx", "Vehicle forward speed (km/h)", "Longitudinal speed of the vehicle. Drift is more likely at moderate-to-high speeds.", 0, 200, 0.1, 80],
+      ["Ax", "Forward acceleration (m/s²)", "Longitudinal acceleration from braking or accelerating. Affects car stability.", -10, 10, 0.01, 0],
+      ["Ay", "Sideways acceleration (m/s²)", "Lateral acceleration. High values often trigger drift.", -10, 10, 0.01, -2],
+      ["Az", "Vertical acceleration (m/s²)", "Optional; reflects uneven road surfaces.", -3, 3, 0.01, 0],
+    ],
+  },
+  {
+    title: "🎮 Steering & Rotation",
+    fields: [
+      ["steering_angle", "Steering angle (degrees)", "Driver's steering input. High angles increase drift probability.", -45, 45, 0.1, -10],
+      ["yaw_rate", "Yaw rate (deg/s)", "Rate of rotation around the vertical axis. High yaw rate correlates with oversteer/drift.", -20, 20, 0.1, -3],
+      ["slip_angle", "Slip angle (degrees)", "Difference between the vehicle's heading and its actual velocity direction.", -25, 25, 0.1, -4],
+    ],
+  },
+  {
+    title: "🛞 Wheel Speeds & Traction",
+    fields: [
+      ["V_fl", "Front-left wheel speed (km/h)", "Used to compute rear traction loss (should be close to forward speed).", 0, 220, 0.1, 79],
+      ["V_fr", "Front-right wheel speed (km/h)", "Used for traction calculation (should be close to forward speed).", 0, 220, 0.1, 79],
+      ["V_rl", "Rear-left wheel speed (km/h)", "Rear wheel slip relative to this indicates drift.", 0, 220, 0.1, 82],
+      ["V_rr", "Rear-right wheel speed (km/h)", "Rear wheel slip relative to this indicates drift.", 0, 220, 0.1, 82],
+      ["tire_slip_ratio", "Tire slip ratio", "Rear/front wheel speed difference normalized by vehicle speed. Higher values indicate potential drift.", -0.5, 0.5, 0.001, 0.03],
+    ],
+  },
+  {
+    title: "🦶 Driver Inputs",
+    fields: [
+      ["throttle", "Throttle position (%)", "Gas pedal position. High throttle can induce oversteer.", 0, 100, 0.1, 40],
+      ["brake", "Brake pressure (%)", "Brake pedal pressure. Sudden braking affects stability.", 0, 100, 0.1, 0],
+      ["gear", "Current gear", "Gear affects torque delivered to the rear wheels.", 1, 6, 1, 3],
+    ],
+  },
+  {
+    title: "🛣️ Road Conditions",
+    fields: [
+      ["road_curvature", "Road curvature (1/m)", "Sharper curves increase drift likelihood.", 0, 0.1, 0.0001, 0.01],
+      ["road_friction", "Road friction coefficient", "Surface grip. Lower friction (e.g. wet/icy roads) increases drift risk.", 0.1, 1.2, 0.01, 0.85],
+      ["road_slope", "Road slope / banking (degrees)", "Road tilt, which affects lateral forces.", -10, 10, 0.1, 0],
+    ],
+  },
+  {
+    title: "🧮 Derived Features",
+    fields: [
+      ["Ay_Ax_ratio", "Lateral/longitudinal accel. ratio", "Derived: ratio of Ay to Ax, a normalized measure of lateral motion.", -50, 50, 0.01, -2],
+      ["normalized_yaw_rate", "Normalized yaw rate", "Derived: yaw rate divided by speed, accounting for speed dependency.", -2, 2, 0.001, -0.04],
+      ["slip_angle_approx", "Approx. slip angle (radians)", "Derived: atan(Ay / Vx), indicating sideways drift tendency.", -2, 2, 0.001, -0.03],
+      ["rear_traction_loss", "Rear traction loss (km/h)", "Derived: difference between rear and front wheel speeds. High values indicate rear slip.", -100, 100, 0.01, 3],
+    ],
+  },
 ];
 
+const FIELDS = GROUPS.flatMap(g => g.fields);
 const form = document.getElementById("drift-form");
 
-FIELDS.forEach(([key, label, help, min, max, step, def]) => {
-  const field = document.createElement("div");
-  field.className = "field";
-  field.innerHTML = `
-    <label for="${key}">${label}
-      <span class="help-icon" tabindex="0">?</span>
-      <span class="tooltip">${help} Valid range: ${min} to ${max}.</span>
-    </label>
-    <input type="number" id="${key}" name="${key}" required
-      min="${min}" max="${max}" step="${step}" value="${def}" />
-    <span class="range-hint">Range: ${min} – ${max}</span>
-  `;
-  form.appendChild(field);
+GROUPS.forEach(group => {
+  const fieldset = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = group.title;
+  fieldset.appendChild(legend);
+
+  const grid = document.createElement("div");
+  grid.className = "fields-grid";
+
+  group.fields.forEach(([key, label, help, min, max, step, def]) => {
+    const field = document.createElement("div");
+    field.className = "field";
+    field.innerHTML = `
+      <label for="${key}">${label}
+        <span class="help-icon" tabindex="0">?</span>
+        <span class="tooltip">${help} Valid range: ${min} to ${max}.</span>
+      </label>
+      <input type="number" id="${key}" name="${key}" required
+        min="${min}" max="${max}" step="${step}" value="${def}" />
+      <span class="range-hint">Range: ${min} – ${max}</span>
+    `;
+    grid.appendChild(field);
+  });
+
+  fieldset.appendChild(grid);
+  form.appendChild(fieldset);
 });
 
 const actions = document.createElement("div");
@@ -213,10 +360,11 @@ form.addEventListener("submit", async (e) => {
     const pct = (data.drift_probability * 100).toFixed(1);
 
     resultBox.className = "show " + (data.drift ? "drift" : "no-drift");
-    verdictText.textContent = data.drift ? "⚠ Drift" : "✓ No Drift";
+    verdictText.innerHTML = data.drift ? "⚠️ Drift" : "✅ No Drift";
     verdictText.className = "verdict " + (data.drift ? "drift" : "no-drift");
-    probText.textContent = `Drift probability: ${pct}% (decision threshold: ${(data.threshold * 100).toFixed(0)}%)`;
+    probText.textContent = `Drift probability: ${pct}% · decision threshold: ${(data.threshold * 100).toFixed(0)}%`;
     probBar.style.width = `${pct}%`;
+    resultBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } catch (err) {
     formError.textContent = "Error: " + err.message;
   } finally {
